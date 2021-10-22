@@ -45,10 +45,10 @@ public class Pesepay {
         GET
     }
 
-    public Pesepay(String integrationKey, String encryptionKey, Mode mode) {
+    public Pesepay(String integrationKey, String encryptionKey) {
         this.integrationKey = integrationKey;
         this.encryptionKey = encryptionKey;
-        this.baseUrl = mode == Mode.TEST ? TEST_BASE_URL : LIVE_BASE_URL;
+        this.baseUrl = LIVE_BASE_URL; // TODO mode == Mode.TEST ? TEST_BASE_URL : LIVE_BASE_URL;
     }
 
     public Payment createPayment(String currencyCode, String paymentMethodCode, String email) {
