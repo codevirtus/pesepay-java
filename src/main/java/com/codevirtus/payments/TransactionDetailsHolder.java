@@ -1,9 +1,9 @@
-package com.pesepay.payments;
+package com.codevirtus.payments;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pesepay.encyrption.PayloadEncryptionContext;
-import com.pesepay.encyrption.PaymentPayloadEncryptionHelper;
+import com.codevirtus.encyrption.PayloadEncryptionContext;
+import com.codevirtus.encyrption.PaymentPayloadEncryptionHelper;
 import lombok.Data;
 import lombok.val;
 

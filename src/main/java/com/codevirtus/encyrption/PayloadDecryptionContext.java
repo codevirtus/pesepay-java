@@ -1,4 +1,4 @@
-package com.pesepay.encyrption;
+package com.codevirtus.encyrption;
 
 import lombok.*;
 
@@ -6,9 +6,9 @@ import lombok.*;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class PayloadEncryptionContext {
+public class PayloadDecryptionContext {
 
-    private String rawData;
+    private String encryptedData;
 
     private String encryptionKey;
 

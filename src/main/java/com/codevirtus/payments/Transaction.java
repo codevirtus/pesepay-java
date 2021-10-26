@@ -1,4 +1,4 @@
-package com.pesepay.payments;
+package com.codevirtus.payments;
 
 import lombok.Getter;
 import lombok.Setter;

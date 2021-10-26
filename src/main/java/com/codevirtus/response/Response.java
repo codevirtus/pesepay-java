@@ -1,4 +1,4 @@
-package com.pesepay.response;
+package com.codevirtus.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

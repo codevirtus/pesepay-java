@@ -1,4 +1,4 @@
-package com.pesepay.encyrption;
+package com.codevirtus.encyrption;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

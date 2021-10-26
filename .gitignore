@@ -1,4 +1,4 @@
 target/
 .idea/
 pesepay-java-integration.iml
-src/main/java/com/pesepay/Test.java
+src/main/java/com/codevirtus/Test.java

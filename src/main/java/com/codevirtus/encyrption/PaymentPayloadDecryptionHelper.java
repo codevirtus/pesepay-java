@@ -1,4 +1,4 @@
-package com.pesepay.encyrption;
+package com.codevirtus.encyrption;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

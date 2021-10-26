@@ -1,21 +1,22 @@
-package com.pesepay;
+package com.codevirtus;
 
+import com.codevirtus.encyrption.PayloadDecryptionContext;
+import com.codevirtus.encyrption.PaymentPayloadDecryptionHelper;
+import com.codevirtus.payments.*;
+import com.codevirtus.response.Response;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pesepay.encyrption.PayloadDecryptionContext;
-import com.pesepay.encyrption.PaymentPayloadDecryptionHelper;
-import com.pesepay.payments.*;
-import com.pesepay.response.Response;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.val;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Getter
@@ -48,7 +49,7 @@ public class Pesepay {
     public Pesepay(String integrationKey, String encryptionKey) {
         this.integrationKey = integrationKey;
         this.encryptionKey = encryptionKey;
-        this.baseUrl = LIVE_BASE_URL; // TODO mode == Mode.TEST ? TEST_BASE_URL : LIVE_BASE_URL;
+        this.baseUrl = TEST_BASE_URL; // TODO mode == Mode.TEST ? TEST_BASE_URL : LIVE_BASE_URL;
     }
 
     public Payment createPayment(String currencyCode, String paymentMethodCode, String email) {
@@ -115,40 +116,65 @@ public class Pesepay {
 
     public Response pollTransaction(String  pollUrl) {
         val response = sendRequest(RequestType.GET, pollUrl, null);
-        response.setPaid(response.getTransactionStatus().equals("SUCCESS"));
+        if (response.getTransactionStatus() != null) {
+            response.setPaid(response.getTransactionStatus().equals("SUCCESS"));
+        }
         return response;
     }
 
     @SneakyThrows
-    private <T> Response sendRequest(RequestType requestType, String url, T t) {
-        HttpClient client = HttpClient.newHttpClient();
+    private <T> Response sendRequest(RequestType requestType, String urlString, T t) {
 
-        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                .headers("Content-Type", "application/json", "key", this.integrationKey)
-                .uri(URI.create(url));
+        val url = new URL(urlString);
 
-        if (requestType == RequestType.POST) {
+        val connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod(requestType.name());
+        connection.setRequestProperty("Content-Type", "application/json; utf-8");
+        connection.setRequestProperty("Accept", "application/json");
+        connection.setRequestProperty("key", this.integrationKey);
+        connection.setDoOutput(true);
+
+        if (requestType.equals(RequestType.POST)) {
             val requestBody = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(t);
-            requestBuilder.POST(HttpRequest.BodyPublishers.ofString(requestBody));
+            try(val os = connection.getOutputStream()) {
+                byte[] input = requestBody.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
         }
 
-        HttpResponse<String> httpResponse = client.send(requestBuilder.build(), BodyHandlers.ofString());
+        if (connection.getResponseCode() == 200) {
+            try(val br = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
+                val response = parseResponse(br);
 
-        if (httpResponse.statusCode() == 200) {
-            val result = MAPPER.readValue(httpResponse.body(), TransactionDetailsHolder.class);
+                val result = MAPPER.readValue(response, TransactionDetailsHolder.class);
 
-            val decryptionContext = PayloadDecryptionContext.builder()
+                val decryptionContext = PayloadDecryptionContext.builder()
                     .encryptedData(result.getPayload())
                     .encryptionKey(this.encryptionKey)
                     .build();
 
-            val response = PaymentPayloadDecryptionHelper.decrypt(decryptionContext, Response.class);
-            response.setSuccess(true);
+                val decryptedResponse = PaymentPayloadDecryptionHelper.decrypt(decryptionContext, Response.class);
+                decryptedResponse.setSuccess(true);
 
-            return response;
+                return decryptedResponse;
+            }
+        } else {
+            try(val br = new BufferedReader(new InputStreamReader(connection.getErrorStream(), StandardCharsets.UTF_8))) {
+                val response = parseResponse(br);
+                return MAPPER.readValue(response, Response.class);
+            }
+        }
+    }
+
+    @SneakyThrows
+    private String parseResponse(BufferedReader reader) {
+        val response = new StringBuilder();
+        String responseLine;
+        while ((responseLine = reader.readLine()) != null) {
+            response.append(responseLine.trim());
         }
 
-        return MAPPER.readValue(httpResponse.body(), Response.class);
+        return response.toString();
     }
 
 }
