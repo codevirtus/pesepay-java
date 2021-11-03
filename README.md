@@ -1,3 +1,23 @@
+### Installation
+To use the Java Pesepay SDK, you need to add it as a dependency to your project. The release version will be in the Maven Central Repository.
+#### Maven
+```xml
+<dependency>
+    <groupId>com.pesepay</groupId>
+    <artifactId>pesepay</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+#### Gradle
+```properties
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.pesepay:pesepay:1.0.0'
+}
+```
 ### Getting Started
 Create an instance of the `Pesepay` class using your integration key and encryption key as supplied by Pesepay.
 
